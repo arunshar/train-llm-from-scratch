@@ -1,0 +1,7 @@
+datasets
+h5py
+numpy
+requests
+tiktoken
+tqdm
+zstandard
