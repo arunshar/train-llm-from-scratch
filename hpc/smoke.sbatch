@@ -23,8 +23,14 @@ if [[ "$(cat "${PROJECT_ROOT}/BOOTSTRAP_STATUS" 2>/dev/null)" != "STAGING_PASS" 
   echo "bootstrap has not reached STAGING_PASS" >&2
   exit 1
 fi
-if [[ ! -f "$IMAGE" || ! -x "${ENV_ROOT}/bin/python" ]]; then
-  echo "staged image or Python environment is missing" >&2
+if [[ ! -f "$IMAGE" ]]; then
+  echo "staged image is missing: $IMAGE" >&2
+  exit 1
+fi
+# The venv python is a symlink to the container interpreter. Test the
+# symlink itself on the host; -x follows it and fails outside Apptainer.
+if [[ ! -f "${ENV_ROOT}/pyvenv.cfg" || ! -L "${ENV_ROOT}/bin/python" ]]; then
+  echo "staged Python environment is missing: $ENV_ROOT" >&2
   exit 1
 fi
 if [[ "$(git -C "$REMOTE_CODE_ROOT" rev-parse HEAD)" != "$EXPECTED_COMMIT" ]]; then
