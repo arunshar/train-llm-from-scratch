@@ -41,24 +41,28 @@ image_digest=$(sha256sum "$IMAGE" | awk '{print $1}')
 lock_digest=$(sha256sum "$LOCK" | awk '{print $1}')
 printf 'image_sha256=%s\nlock_sha256=%s\n' "$image_digest" "$lock_digest"
 
+if [[ -e "$ENV_ROOT" && ! -f "${ENV_ROOT}/requirements.sha256" ]]; then
+  echo "removing incomplete environment: $ENV_ROOT"
+  rm -rf "$ENV_ROOT"
+fi
+
 if [[ -e "$ENV_ROOT" ]]; then
-  if [[ ! -f "${ENV_ROOT}/requirements.sha256" ]]; then
-    echo "existing environment has no lock marker: $ENV_ROOT" >&2
-    exit 1
-  fi
   recorded_digest=$(cat "${ENV_ROOT}/requirements.sha256")
   if [[ "$recorded_digest" != "$lock_digest" ]]; then
     echo "existing environment was built from a different lock file" >&2
     exit 1
   fi
 else
+  # Official PyTorch runtime images omit ensurepip. Create the venv without
+  # pip, then install through the image interpreter so packages land in
+  # sys.prefix (the venv) while still seeing torch from system site-packages.
   apptainer exec \
     --bind "${PROJECT_ROOT}:/msi" \
     --bind "${REMOTE_CODE_ROOT}:/workspace:ro" \
     "$IMAGE" \
     bash -lc '
       set -euo pipefail
-      python -m venv --system-site-packages /msi/envs/pytorch-2.14.0
+      python -m venv --without-pip --system-site-packages /msi/envs/pytorch-2.14.0
       /msi/envs/pytorch-2.14.0/bin/python -m pip install \
         --require-hashes \
         -r /workspace/hpc/requirements.lock
