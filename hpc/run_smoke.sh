@@ -24,18 +24,14 @@ failure_status() {
 }
 trap failure_status ERR
 
-actual_commit=$(git rev-parse HEAD)
-if [[ "$actual_commit" != "$EXPECTED_COMMIT" ]]; then
-  echo "source commit mismatch: got $actual_commit, expected $EXPECTED_COMMIT" >&2
-  exit 1
-fi
-if [[ -n "$(git status --porcelain)" ]]; then
-  echo "remote source tree is not clean" >&2
-  git status --short >&2
+# The PyTorch runtime image has no git, and apptainer --cleanenv hides the
+# host binary. smoke.sbatch already verified HEAD and a clean tree.
+if [[ ! -e /workspace/.git ]]; then
+  echo "workspace is not a git checkout" >&2
   exit 1
 fi
 
-printf '%s\n' "$actual_commit" > "${ROOT}/source_commit.txt"
+printf '%s\n' "$EXPECTED_COMMIT" > "${ROOT}/source_commit.txt"
 sha256sum "$IMAGE" > "${ROOT}/container_sha256.txt"
 "$PY" -m pip freeze > "${ROOT}/environment.txt"
 nvidia-smi --query-gpu=name,uuid,driver_version,memory.total \
