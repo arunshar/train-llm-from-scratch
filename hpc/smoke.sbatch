@@ -27,6 +27,7 @@ if [[ ! -f "$IMAGE" ]]; then
   echo "staged image is missing: $IMAGE" >&2
   exit 1
 fi
+bash "${REMOTE_CODE_ROOT}/hpc/verify_image_pin.sh" --image "$IMAGE" >/dev/null
 # The venv python is a symlink to the container interpreter. Test the
 # symlink itself on the host; -x follows it and fails outside Apptainer.
 if [[ ! -f "${ENV_ROOT}/pyvenv.cfg" || ! -L "${ENV_ROOT}/bin/python" ]]; then
