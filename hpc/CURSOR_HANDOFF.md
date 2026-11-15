@@ -9,10 +9,9 @@ Read this file before acting. `hpc/LEDGER.md` is the short status. This file is 
 
 ## Status line
 
-Reduced 13M one-H100 smoke is verified. Arun opened a 400M envelope. Stage 1 is bounded Pile val plus train shard 00, then 400M pretrain on one H100 with resume. The new harness is local and uncommitted. No 400M job has been submitted.
+Reduced 13M one-H100 smoke is verified. Arun opened a 400M envelope. Stage 1 is bounded Pile val plus train shard 00, then 400M pretrain on one H100 with resume. The harness is committed on branch `hpc/400m-stage1-envelope` (draft PR #1) and is not merged to `main`. No 400M job has been submitted.
 
-GitHub / MSI checkout: `4b76c110284ec76d428294731a79032e9922a62b` (`main`, remote still clean).
-Local tree is dirty with the image pin and the 400M stage-1 scripts. Do not rsync until Arun commits.
+MSI checkout: `4b76c110284ec76d428294731a79032e9922a62b` (detached HEAD, still clean). Do not rsync until Arun merges the branch and asks.
 Smoke that actually ran: commit `be91e7c70ce97eb7cc621a93bafbae90d9e6a001`, job `1503299`.
 Staging: `BOOTSTRAP_STATUS=STAGING_PASS`.
 Smoke: `RESULT_STATUS=SMOKE_RESULT_VERIFIED`.
@@ -152,7 +151,7 @@ The SIF python is 3.12. The venv `bin/python` is a symlink to `/usr/bin/python` 
 
 ## Open decisions (Arun only)
 
-1. Commit the local image pin and 400M stage-1 harness, then authorize `submit_400m_data.sh`.
+1. Review and merge draft PR #1, then authorize `submit_400m_data.sh`.
 2. After DATA_STATUS=READY, authorize the first 24h pretrain job.
 3. Leave remaining Pile shards and post-training closed.
 
