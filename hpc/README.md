@@ -24,6 +24,8 @@ PYTHONPATH=. "$PY" tests/test_post_training_smoke.py
 PYTHONPATH=. "$PY" tests/test_rl_math.py
 PYTHONPATH=. "$PY" tests/test_checkpoint_resume.py
 PYTHONPATH=. "$PY" tests/verify_rl_optimizes.py
+PYTHONPATH=. "$PY" tests/test_hpc_image_pin.py
+PYTHONPATH=. "$PY" tests/test_hpc_400m_envelope.py
 ```
 
 ## Source staging
@@ -66,6 +68,8 @@ Submit only after bootstrap verification:
 ssh agate 'cd ~/train-llm-from-scratch && bash hpc/submit_smoke.sh'
 ```
 
+Submit and smoke both refuse unless the staged SIF digest matches `hpc/expected_image.sha256`. That pin is the image hashed by bootstrap job 1503077 and reused by smoke job 1503299. Submit checks the recorded sidecar on the login node. The smoke job rehashes the SIF on the compute node.
+
 The smoke requests one H100, 8 CPUs, 64 GB of memory, and 30 minutes. It writes to a fresh directory under:
 
 ```text
@@ -74,6 +78,26 @@ The smoke requests one H100, 8 CPUs, 64 GB of memory, and 30 minutes. It writes 
 
 The run is accepted only when `RESULT_STATUS` contains `SMOKE_RESULT_VERIFIED` and `smoke_result.json` records all eight checkpoints.
 
+## 400M stage 1 (data then pretrain)
+
+This envelope is not automatic after smoke. It is also not the full 50k-step recipe and not SFT/RL.
+
+Bounded data is Pile-uncopyrighted `val.jsonl.zst` (338 MB) plus `train/00.jsonl.zst` (11.2 GB). Remaining shards stay excluded. Data is a CPU `msismall` job. Pretrain is one H100 for 24 hours with `--resume`. Completing `train_steps=50000` in one job is not the success criterion. A loadable 400M checkpoint with finite logits is.
+
+Commit and sync before submit. The remote checkout must stay clean.
+
+```bash
+ssh agate 'cd ~/train-llm-from-scratch && bash hpc/submit_400m_data.sh'
+# after DATA_STATUS=READY and the queue is empty
+ssh agate 'cd ~/train-llm-from-scratch && bash hpc/submit_400m_pretrain.sh'
+```
+
+Workspace:
+
+```text
+/scratch.global/arunshar/train-llm-from-scratch/workspaces/400m
+```
+
 ## Scale-up gate
 
-Do not submit the 400M configuration after a smoke pass automatically. First add bounded data manifests, robust resume coverage, stage-specific Slurm envelopes, and independent evaluation. The MSI partition has a 24-hour job ceiling, while the upstream post-training stages do not support full resume.
+Do not start SFT, reward, DPO, PPO, or GRPO from this envelope. Upstream post-training stages do not fully resume, and `msigpu` MaxTime is 24 hours. Do not download Pile shards 01 through 29 unless Arun opens a later data envelope.

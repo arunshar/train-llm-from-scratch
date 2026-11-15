@@ -13,6 +13,8 @@ if [[ "$(cat "${PROJECT_ROOT}/BOOTSTRAP_STATUS" 2>/dev/null)" != "STAGING_PASS" 
   echo "bootstrap must be verified before the smoke job" >&2
   exit 1
 fi
+bash "${REMOTE_CODE_ROOT}/hpc/verify_image_pin.sh" \
+  --sidecar "${PROJECT_ROOT}/container.sha256" >/dev/null
 if (( $(squeue -u "$USER" -h | wc -l) >= 1 )); then
   echo "project concurrency ceiling is one active job" >&2
   exit 1

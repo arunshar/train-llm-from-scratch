@@ -17,11 +17,11 @@ allowed_push_behavior: arun-only
 
 environment_strategy: apptainer-prebuilt
 environment_lock_file: hpc/requirements.lock
-python_or_runtime_version: VERIFY_FROM_CONTAINER_DURING_BOOTSTRAP
+python_or_runtime_version: "3.12.3"
 module_requirements: []
 container_strategy: prebuilt-sif
 container_image_or_definition: docker://pytorch/pytorch:2.14.0-cuda12.6-cudnn9-runtime
-container_digest: FROM_DISCOVERY_AFTER_BOOTSTRAP
+container_digest: 254b32301756f7c63bd636984dc954ae4d0d59d86cd3e600aa6bcae13cbb9ce5
 cuda_version: "12.6"
 framework_version: torch==2.14.0
 

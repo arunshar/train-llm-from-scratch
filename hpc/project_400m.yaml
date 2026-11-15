@@ -1,0 +1,78 @@
+project_name: train-llm-from-scratch-400m-pretrain
+project_owner: Arun Sharma
+decision_owner: Arun Sharma
+incident_contact: MSI user arunshar
+project_class: single-gpu-400m-pretrain-stage1
+scientific_or_engineering_goal: >-
+  Stage 1 of the 400M envelope. Prepare one bounded Pile subset (val plus train
+  shard 00) and train the default 400M base on one H100 for up to 24 hours with
+  checkpoint resume. This is not a finished 50k-step pretrain and it is not SFT,
+  DPO, PPO, or GRPO.
+
+repository_source: https://github.com/arunshar/train-llm-from-scratch
+local_repository_root: /Users/arunsharma/code/train-llm-from-scratch
+remote_repository_root: /users/1/arunshar/train-llm-from-scratch
+expected_branch: main
+expected_commit: resolved from clean HEAD by the submission scripts
+remote_worktree_policy: clean-required
+allowed_source_edits: local-only
+allowed_commit_behavior: arun-only
+allowed_push_behavior: arun-only
+
+environment_strategy: apptainer-prebuilt
+environment_lock_file: hpc/requirements.lock
+python_or_runtime_version: "3.12.3"
+container_image_or_definition: docker://pytorch/pytorch:2.14.0-cuda12.6-cudnn9-runtime
+container_digest: 254b32301756f7c63bd636984dc954ae4d0d59d86cd3e600aa6bcae13cbb9ce5
+cuda_version: "12.6"
+framework_version: torch==2.14.0+cu126
+
+data_job_entry_point: bash hpc/submit_400m_data.sh
+pretrain_entry_point: bash hpc/submit_400m_pretrain.sh
+evaluation_entry_point: hpc/verify_400m_pretrain.py
+checkpoint_resume_entry_point: scripts/pretrain_base.py --resume
+full_run_entry_point: NOT_THIS_ENVELOPE
+post_training_entry_point: NOT_THIS_ENVELOPE
+
+fixture_or_smoke_data: NOT_USED
+training_data_location: /scratch.global/arunshar/train-llm-from-scratch/workspaces/400m/data
+data_owner: EleutherAI / monology pile-uncopyrighted mirror
+data_license: pile-uncopyrighted
+data_classification: public
+data_manifest: data_manifest.json
+allowed_data_transfer: pile-uncopyrighted val.jsonl.zst and train/00.jsonl.zst only
+num_train_shards: 1
+source_val_bytes: 338000000
+source_train_shard_bytes: 11200000000
+
+MSI_project: shekhars
+Slurm_account: shekhars
+data_partition: msismall
+data_wall_time: "12:00:00"
+partition: msigpu
+GPU_type: h100
+GPU_count: 1
+CPU_count: 8
+memory: 64G
+wall_time: "24:00:00"
+maximum_concurrent_jobs: 1
+maximum_total_jobs: 8
+maximum_retry_count: 3
+maximum_storage_written: 80G
+
+workspace: /scratch.global/arunshar/train-llm-from-scratch/workspaces/400m
+artifact_parent: /scratch.global/arunshar/train-llm-from-scratch/runs
+success_criteria: >-
+  DATA_STATUS equals READY and a 400M pretrain checkpoint loads with finite
+  logits. Completing configs/pretrain.json train_steps=50000 is not required
+  in one 24h job.
+authorization_expiration: after one data job plus 24h pretrain attempts with resume
+teardown_policy: cancel only exact job IDs created by this envelope
+retention_policy: retain data, logs, provenance, and checkpoints for 30 days
+promotion_authority: Arun Sharma
+external_actions_explicitly_excluded:
+  - remaining Pile train shards 01 through 29
+  - SFT reward DPO PPO GRPO
+  - GSM8K quality claims
+  - repository pushes
+  - model publication

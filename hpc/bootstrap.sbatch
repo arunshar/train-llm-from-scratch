@@ -37,7 +37,7 @@ if [[ ! -f "$IMAGE" ]]; then
   mv "$temporary_image" "$IMAGE"
 fi
 
-image_digest=$(sha256sum "$IMAGE" | awk '{print $1}')
+image_digest=$(bash "${REMOTE_CODE_ROOT}/hpc/verify_image_pin.sh" --image "$IMAGE")
 lock_digest=$(sha256sum "$LOCK" | awk '{print $1}')
 printf 'image_sha256=%s\nlock_sha256=%s\n' "$image_digest" "$lock_digest"
 
@@ -89,5 +89,5 @@ print(\"torch\", torch.__version__, \"cuda\", torch.version.cuda)
     /msi/envs/pytorch-2.14.0/bin/python -m pip freeze > /msi/environment.freeze.txt
   '
 
-sha256sum "$IMAGE" > "${PROJECT_ROOT}/container.sha256"
+printf '%s  %s\n' "$image_digest" "$IMAGE" > "${PROJECT_ROOT}/container.sha256"
 printf 'STAGING_PASS\n' > "${PROJECT_ROOT}/BOOTSTRAP_STATUS"
